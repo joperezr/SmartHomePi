@@ -1,9 +1,15 @@
+using Iot.Device.Bmx280;
+using Iot.Units;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Device.Gpio;
+using System.Device.I2c;
+using System.Device.I2c.Drivers;
+using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SmartHomePi
@@ -25,6 +31,10 @@ namespace SmartHomePi
         /// The GpioController that controls the RaspberryPi.
         /// </summary>
         private GpioController _gpioController;
+        /// <summary>
+        /// Bme280 Temperature Sensor that will be used to get preassure and temperature data.
+        /// </summary>
+        private Bme280 _temperatureSensor;
 
         /// <summary>
         /// Main constructor. Takes in the DeviceClient connection with Azure IoT Hub.
@@ -35,7 +45,12 @@ namespace SmartHomePi
             // Setting the Azure method handlers for C2D communication
             _deviceClient = deviceClient;
             _deviceClient.SetMethodHandlerAsync("ChangeLightBulbState", ChangeLightBulbState, null).Wait();
-            _deviceClient.SetMethodHandlerAsync("GetLightBulbStatus", GetLightBulbStatus, null).Wait();
+            _deviceClient.SetMethodHandlerAsync("GetLightBulbStatus", GetLightBulbStatus, null).Wait(); 
+            _deviceClient.SetMethodHandlerAsync("GetTemperatureAndPreassure", GetTemperatureAndPreassure, null).Wait();
+
+            // Setting up the temperature sensor
+            var i2cDevice = new UnixI2cDevice(new I2cConnectionSettings(1, 0x77));
+            _temperatureSensor = new Bme280(i2cDevice);
 
             // Setting up Gpio Pins
             _gpioController = new GpioController();
@@ -139,6 +154,35 @@ namespace SmartHomePi
         }
 
         /// <summary>
+        /// Method handler that will return the current temperature and pressure information.
+        /// </summary>
+        /// <param name="methodRequest">The request that was sent from the server.</param>
+        /// <param name="userContext">The user context.</param>
+        /// <returns></returns>
+        public async Task<MethodResponse> GetTemperatureAndPreassure(MethodRequest methodRequest, object userContext)
+        {
+            // Print message to the console of the message that was received.
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"Getting a request from Hub for temperature and preassure info.");
+            Console.ResetColor();
+
+            // Get temperature and preassure data.
+            Temperature temp = await _temperatureSensor.ReadTemperatureAsync();
+            double pressure = await _temperatureSensor.ReadPressureAsync();
+
+            // Print message to the console of the data.
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"Temperature in degrees Fahrenheit: {temp.Fahrenheit}");
+            Console.WriteLine($"Preassure in Pascals:              {pressure}");
+            Console.ResetColor();
+
+            // Construct the response object.
+            var result = new TemperatureData { TemperatureInFahrenheit = temp.Fahrenheit, PreassureInPascals = pressure };
+            var resultString = JsonConvert.SerializeObject(result);
+            return new MethodResponse(Encoding.UTF8.GetBytes(resultString), 200);
+        }
+
+        /// <summary>
         /// Dispose method.
         /// </summary>
         public void Dispose()
@@ -149,6 +193,9 @@ namespace SmartHomePi
             // Dispose the Raspberry Pi controller.
             _gpioController?.Dispose();
             _gpioController = null;
+            // Dispose temperature sensor.
+            _temperatureSensor?.Dispose();
+            _temperatureSensor = null;
         }
     }
 
@@ -165,5 +212,20 @@ namespace SmartHomePi
         /// The id of the light bulb to be controlled.
         /// </summary>
         public int Id { get; set; }
+    }
+
+    /// <summary>
+    /// Model class to represent the messages with Temperature information.
+    /// </summary>
+    public class TemperatureData
+    {
+        /// <summary>
+        /// The temperature in degrees Fahrenheit.
+        /// </summary>
+        public double TemperatureInFahrenheit { get; set; }
+        /// <summary>
+        /// The pressure in Pascals.
+        /// </summary>
+        public double PreassureInPascals { get; set; }
     }
 }
