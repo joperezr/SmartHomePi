@@ -1,6 +1,7 @@
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Device.Gpio;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,10 @@ namespace SmartHomePi
     /// </summary>
     internal class BuildSample : IDisposable
     {
+        /// <summary>
+        /// Dictionary that holds the current state of all light bulbs.
+        /// </summary>
+        private Dictionary<int, bool> _lightsStatus;
         /// <summary>
         /// The DeviceClient that provides communication with Azure IoT Hub.
         /// </summary>
@@ -30,6 +35,7 @@ namespace SmartHomePi
             // Setting the Azure method handlers for C2D communication
             _deviceClient = deviceClient;
             _deviceClient.SetMethodHandlerAsync("ChangeLightBulbState", ChangeLightBulbState, null).Wait();
+            _deviceClient.SetMethodHandlerAsync("GetLightBulbStatus", GetLightBulbStatus, null).Wait();
 
             // Setting up Gpio Pins
             _gpioController = new GpioController();
@@ -39,6 +45,12 @@ namespace SmartHomePi
             _gpioController.Write(26, true);
             _gpioController.Write(20, true);
             _gpioController.Write(21, true);
+
+            // Setting up Dictionary of light bulb state
+            _lightsStatus = new Dictionary<int, bool>();
+            _lightsStatus.Add(1, false);
+            _lightsStatus.Add(2, false);
+            _lightsStatus.Add(3, false);
         }
 
         /// <summary>
@@ -90,6 +102,7 @@ namespace SmartHomePi
             string state = dataAsState.State ? "On" : "Off";
             Console.WriteLine($"Setting the bulb with id {dataAsState.Id} to {state}");
             Console.ResetColor();
+            _lightsStatus[dataAsState.Id] = dataAsState.State;
 
             // Turn the light on/off.
             _gpioController.Write(gpioPin, !dataAsState.State);
@@ -100,6 +113,27 @@ namespace SmartHomePi
                 status = "Success",
                 message = $"The light bulb {dataAsState.Id} was turned {state}"
             };
+            var resultString = JsonConvert.SerializeObject(result);
+            return Task.FromResult(new MethodResponse(Encoding.UTF8.GetBytes(resultString), 200));
+        }
+
+        /// <summary>
+        /// Method that will return the state of all configured light bulbs.
+        /// </summary>
+        /// <param name="methodRequest">The request that was sent from the server.</param>
+        /// <param name="userContext">The user context</param>
+        /// <returns>A list of LightBulbState with the information of the status of each light bulb.</returns>
+        public Task<MethodResponse> GetLightBulbStatus(MethodRequest methodRequest, object userContext)
+        {
+            // Print message to the console of the message that was received.
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"Getting a request from Hub for Light Status.");
+            Console.ResetColor();
+
+            // Construct the response with the current state.
+            List<LightBulbState> result = new List<LightBulbState>();
+            result.Add(new LightBulbState { Id = 1, State = _lightsStatus[1] });
+            result.Add(new LightBulbState { Id = 3, State = _lightsStatus[3] });
             var resultString = JsonConvert.SerializeObject(result);
             return Task.FromResult(new MethodResponse(Encoding.UTF8.GetBytes(resultString), 200));
         }
