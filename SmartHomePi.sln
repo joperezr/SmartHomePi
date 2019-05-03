@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28824.287
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartHomePi", "SmartHomePi\SmartHomePi.csproj", "{67CC9AE8-1B2E-476F-A4ED-71B788B18860}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartHomeCloud", "SmartHomeCloud\SmartHomeCloud.csproj", "{2798A6DF-8DC9-4EEC-BCD7-CF6CA6954B36}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{67CC9AE8-1B2E-476F-A4ED-71B788B18860}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67CC9AE8-1B2E-476F-A4ED-71B788B18860}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67CC9AE8-1B2E-476F-A4ED-71B788B18860}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67CC9AE8-1B2E-476F-A4ED-71B788B18860}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2798A6DF-8DC9-4EEC-BCD7-CF6CA6954B36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2798A6DF-8DC9-4EEC-BCD7-CF6CA6954B36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2798A6DF-8DC9-4EEC-BCD7-CF6CA6954B36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2798A6DF-8DC9-4EEC-BCD7-CF6CA6954B36}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8EFE54D8-E0F5-4201-AE41-321BA870440F}
+	EndGlobalSection
+EndGlobal
