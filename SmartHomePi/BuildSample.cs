@@ -2,14 +2,13 @@ using Iot.Device.Bmx280;
 using Iot.Units;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
+using SmartHomeCloud.Models;
 using System;
 using System.Collections.Generic;
 using System.Device.Gpio;
 using System.Device.I2c;
 using System.Device.I2c.Drivers;
-using System.Diagnostics;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace SmartHomePi
@@ -146,9 +145,11 @@ namespace SmartHomePi
             Console.ResetColor();
 
             // Construct the response with the current state.
-            List<LightBulbState> result = new List<LightBulbState>();
-            result.Add(new LightBulbState { Id = 1, State = _lightsStatus[1] });
-            result.Add(new LightBulbState { Id = 3, State = _lightsStatus[3] });
+            LightBulbState[] result = new LightBulbState[]
+            {
+                new LightBulbState { Id = 1, State = _lightsStatus[1] },
+                new LightBulbState { Id = 3, State = _lightsStatus[3] }
+            };
             var resultString = JsonConvert.SerializeObject(result);
             return Task.FromResult(new MethodResponse(Encoding.UTF8.GetBytes(resultString), 200));
         }
@@ -197,35 +198,5 @@ namespace SmartHomePi
             _temperatureSensor?.Dispose();
             _temperatureSensor = null;
         }
-    }
-
-    /// <summary>
-    /// Model class to represent the messages for the light bulb state.
-    /// </summary>
-    public class LightBulbState
-    {
-        /// <summary>
-        /// The State of the light bulb on/off.
-        /// </summary>
-        public bool State { get; set; }
-        /// <summary>
-        /// The id of the light bulb to be controlled.
-        /// </summary>
-        public int Id { get; set; }
-    }
-
-    /// <summary>
-    /// Model class to represent the messages with Temperature information.
-    /// </summary>
-    public class TemperatureData
-    {
-        /// <summary>
-        /// The temperature in degrees Fahrenheit.
-        /// </summary>
-        public double TemperatureInFahrenheit { get; set; }
-        /// <summary>
-        /// The pressure in Pascals.
-        /// </summary>
-        public double PreassureInPascals { get; set; }
     }
 }
